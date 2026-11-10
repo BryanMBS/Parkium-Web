@@ -1,0 +1,255 @@
+/* Módulo de PLATAFORMA (Fase 3): tema oscuro independiente de la app operativa.
+ * Fondo #1c1f2b, tarjetas redondeadas, acento morado, outline naranja para
+ * acciones delicadas. Se reutilizan los componentes operativos (Modal, aviso).
+ * Todos los estilos van bajo el prefijo .pf para no filtrar al resto. */
+
+.pf {
+  display: flex;
+  min-height: 100vh;
+  background: #1c1f2b;
+  color: #eceaf4;
+  font-family: inherit;
+}
+
+/* ── Barra lateral ─────────────────────────────────────────────────── */
+.pf-sidebar {
+  width: 235px;
+  min-width: 235px;
+  background: #171923;
+  border-right: 1px solid #2a2e3f;
+  display: flex;
+  flex-direction: column;
+  padding: 18px 14px;
+  gap: 6px;
+}
+
+.pf-marca {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px 18px;
+}
+
+.pf-marca .lema {
+  font-weight: 800;
+  letter-spacing: 2px;
+  font-size: 16px;
+  color: #fff;
+}
+
+.pf-insignia {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: #fff;
+  background: linear-gradient(135deg, #7c3aed, #a855f7);
+  border-radius: 999px;
+  padding: 3px 8px;
+}
+
+.pf-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #b6b3c6;
+  text-decoration: none;
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-size: 14px;
+  border: none;
+  background: transparent;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+}
+
+.pf-item:hover { background: #222634; color: #fff; }
+.pf-item.activo { background: #2a2543; color: #c4b5fd; font-weight: 600; }
+.pf-item .icono { width: 18px; text-align: center; }
+
+.pf-usuario {
+  margin-top: auto;
+  background: #222634;
+  border: 1px solid #2a2e3f;
+  border-radius: 14px;
+  padding: 12px;
+  display: grid;
+  gap: 2px;
+}
+
+.pf-usuario .nombre { font-weight: 600; font-size: 14px; color: #fff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pf-usuario .correo { font-size: 12px; color: #8b88a0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pf-usuario .cargo { margin-top: 6px; font-size: 10px; font-weight: 700; letter-spacing: 1px; color: #c4b5fd; }
+
+/* botón salir reutiliza .pf-item */
+
+/* ── Contenido ─────────────────────────────────────────────────────── */
+.pf-contenido {
+  flex: 1;
+  min-width: 0;
+  padding: 26px 32px 40px;
+  overflow-x: hidden;
+}
+
+.pf-titulo { font-size: 22px; font-weight: 700; color: #fff; margin: 0; }
+.pf-subtitulo { font-size: 13px; color: #8b88a0; margin: 4px 0 22px; }
+
+.pf-tarjeta {
+  background: #23262f;
+  border: 1px solid #2e3140;
+  border-radius: 16px;
+  padding: 18px;
+}
+
+.pf-kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 14px;
+  margin-bottom: 22px;
+}
+
+.pf-kpi {
+  background: #23262f;
+  border: 1px solid #2e3140;
+  border-radius: 16px;
+  padding: 16px 18px;
+}
+
+.pf-kpi .cifra { font-size: 26px; font-weight: 700; color: #fff; }
+/* fix UX-S009: etiqueta ≥4.5:1 sobre #23262f */
+.pf-kpi .etiqueta { font-size: 12px; color: #9fa2b5; margin-top: 2px; }
+
+/* ── Insignias de estado ───────────────────────────────────────────── */
+.pf-estado { font-size: 11px; font-weight: 700; border-radius: 999px; padding: 3px 10px; letter-spacing: .5px; }
+.pf-estado.active { background: rgba(74, 222, 128, .14); color: #4ade80; }
+.pf-estado.suspended { background: rgba(249, 115, 22, .16); color: #fb923c; }
+
+/* ── Botones ───────────────────────────────────────────────────────── */
+.pf-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  min-height: 44px;               /* fix UX-S012: objetivo táctil */
+  background: transparent;
+  color: #eceaf4;
+  transition: background .15s ease, border-color .15s ease, color .15s ease;
+}
+
+.pf-btn:disabled { opacity: .55; cursor: not-allowed; }
+/* fix UX-S013: estado pressed */
+.pf-btn:active:not(:disabled) { filter: brightness(.93); transform: translateY(1px); }
+
+.pf-btn-primario {
+  background: linear-gradient(135deg, #7c3aed, #8b5cf6);
+  color: #fff;
+}
+.pf-btn-primario:hover:not(:disabled) { background: #6d28d9; }
+
+.pf-btn-outline-danger {
+  border-color: #f97316;
+  color: #fb923c;
+  background: transparent;
+}
+.pf-btn-outline-danger:hover:not(:disabled) { background: rgba(249, 115, 22, .1); }
+
+.pf-btn-suave { background: #2c2f3d; border-color: #2c2f3d; color: #dcd9ea; }
+.pf-btn-suave:hover:not(:disabled) { background: #343746; }
+
+.pf-btn-compacto { min-height: 44px; padding: 8px 12px; font-size: 13px; }
+
+/* foco visible en todo el módulo (docs/06 §6.11) */
+.pf :focus-visible { outline: 2px solid #a78bfa; outline-offset: 2px; }
+
+/* ── Formularios ───────────────────────────────────────────────────── */
+.pf .campo > label { color: #dcd9ea; }
+.pf .campo input, .pf .campo select, .pf .campo textarea {
+  background: #1c1f2b;
+  border: 1px solid #33364a;
+  color: #eceaf4;
+}
+
+.pf .campo input:focus, .pf .campo select:focus, .pf .campo textarea:focus {
+  outline: none;
+  border-color: #a78bfa;
+  box-shadow: 0 0 0 2px rgba(167, 139, 250, .25);
+}
+
+/* ── Tarjetas de cliente (listado) ─────────────────────────────────── */
+.pf-clientes {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+}
+
+.pf-cliente {
+  background: #23262f;
+  border: 1px solid #2e3140;
+  border-radius: 16px;
+  padding: 16px;
+  display: grid;
+  gap: 8px;
+}
+
+.pf-cliente .cabecera { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.pf-cliente .nombre { font-weight: 600; color: #fff; font-size: 15px; overflow-wrap: anywhere; }
+.pf-cliente .nit { font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 13px; color: #a78bfa; }
+.pf-cliente .plan-linea { font-size: 12.5px; color: #8b88a0; }
+.pf-cliente .acciones { display: flex; gap: 8px; margin-top: 6px; flex-wrap: wrap; }
+
+/* panel colapsable de creación */
+.pf-colapsable { display: grid; gap: 14px; overflow: hidden; }
+.pf-fila { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
+
+/* ── Tabla de auditoría ────────────────────────────────────────────── */
+.pf .tabla { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+.pf .tabla th { text-align: left; padding: 10px 12px; color: #8b88a0; font-weight: 600; border-bottom: 1px solid #2e3140; }
+.pf .tabla td { padding: 10px 12px; border-bottom: 1px solid #262936; color: #dcd9ea; overflow-wrap: anywhere; }
+
+.mono { font-family: 'JetBrains Mono', ui-monospace, monospace; }
+
+/* ── Pestañas de "Administrar cliente" ─────────────────────────────── */
+.pf-pestanias { display: flex; gap: 4px; border-bottom: 1px solid #2e3140; margin-bottom: 18px; flex-wrap: wrap; }
+.pf-pestanias button {
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: #b6b3c6;
+  padding: 10px 16px;
+  font-size: 14px;
+  cursor: pointer;
+}
+.pf-pestanias button:hover { color: #fff; }
+.pf-pestanias button.activo { color: #c4b5fd; border-bottom-color: #7c3aed; font-weight: 600; }
+
+/* filtro superior de clientes */
+.pf-barra { display: flex; gap: 10px; align-items: flex-end; margin-bottom: 18px; flex-wrap: wrap; }
+.pf-barra .campo { margin-bottom: 0; min-width: 200px; }
+
+/* paginación */
+.pf-paginacion { display: flex; gap: 8px; align-items: center; margin-top: 14px; justify-content: flex-end; }
+
+/* resultados de acciones (aria-live) se reutiliza .aviso tal cual */
+
+/* modal hereda el tema oscuro de la plataforma */
+.fondo-dialogo { background: rgba(10, 11, 16, .7); }
+.pf .dialogo { background: #23262f; border: 1px solid #33364a; color: #eceaf4; }
+.pf .dialogo .cerrar-dialogo:hover { background: #2c2f3d; color: #fff; }
+
+/* responsive: sidebar apilada arriba horizontal en tablet/móvil (720 px) */
+@media (max-width: 720px) {
+  .pf { flex-direction: column; padding-left: env(safe-area-inset-left, 0px); padding-right: env(safe-area-inset-right, 0px); }
+  .pf-contenido { padding-bottom: calc(32px + env(safe-area-inset-bottom, 0px)); }
+  .pf-sidebar { width: 100%; min-width: 0; flex-direction: row; flex-wrap: wrap; align-items: center; border-right: none; border-bottom: 1px solid #2a2e3f; padding: 10px 12px; }
+  .pf-marca { padding: 0 4px; }
+  .pf-usuario { display: none; }
+  .pf-item { padding: 8px 10px; width: auto; min-height: 44px; }
+  .pf-contenido { padding: 18px 14px 32px; }
+  .pf-fila { grid-template-columns: 1fr; }
+}

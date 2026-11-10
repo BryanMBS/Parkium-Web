@@ -1,0 +1,12 @@
+#
+# Requisitos del backend de Parkium Web (desarrollo).
+# Para producción con PostgreSQL: psycopg[binary]>=3.2
+#
+fastapi>=0.115
+uvicorn[standard]>=0.32
+pydantic>=2.9
+pillow>=11.0
+qrcode[pil]>=7.4
+python-barcode>=0.15
+openpyxl>=3.1
+tzdata>=2024.1

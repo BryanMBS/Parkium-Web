@@ -1,0 +1,456 @@
+/* ============================================================
+   Parkium — tokens del sistema de diseño (docs/06 §6.1-6.2)
+   Dos paletas completas; la barra lateral es oscura en ambas.
+   ============================================================ */
+:root {
+  --color-primary: #5B21B6;
+  --color-primary-hover: #4C1D95;
+  --color-on-primary: #FFFFFF;
+  --color-accent: #A3E635;          /* lime: acento del símbolo */
+  --color-success: #22C55E;
+  --color-success-hover: #16A34A;
+  --color-warning: #F59E0B;
+  --color-danger: #EF4444;
+  --color-danger-hover: #DC2626;
+  --color-cyan: #06B6D4;
+
+  --color-background: #F8FAFC;
+  --color-surface: #FFFFFF;
+  --color-surface-alt: #F1F5F9;
+  --color-sidebar: #1B1F2A;         /* siempre oscura: decisión de marca */
+  --color-sidebar-hover: #2A3040;
+  --color-sidebar-text: #FFFFFF;
+  --color-sidebar-muted: #94A3B8;
+  --color-text: #111827;
+  --color-muted: #64748B;
+  --color-border: #E2E8F0;
+  --color-heading: #1B1F2A;
+  --color-selection: #C4B5FD;
+  --color-field-bg: #FFFFFF;
+  --color-field-border: #E2E8F0;
+
+  --font-ui: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  --font-heading: 'Poppins', 'Segoe UI', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Consolas', monospace;
+
+  --radius-card: 14px;
+  --radius-login: 26px;
+  --radius-btn: 12px;
+  --shadow-card: 0 1px 3px rgba(15, 23, 42, .06), 0 1px 2px rgba(15, 23, 42, .08);
+  --sidebar-w: 235px;
+}
+
+[data-theme='oscuro'] {
+  --color-primary: #7C3AED;
+  --color-primary-hover: #6D28D9;
+  --color-success: #16A34A;
+  --color-success-hover: #15803D;
+  --color-warning: #FBBF24;
+  --color-danger: #F87171;
+  --color-danger-hover: #EF4444;
+
+  --color-background: #0B1120;
+  --color-surface: #151C2E;
+  --color-surface-alt: #1E293B;
+  --color-sidebar: #020617;
+  --color-sidebar-hover: #132038;
+  --color-sidebar-text: #F1F5F9;
+  --color-text: #E2E8F0;
+  --color-muted: #94A3B8;
+  --color-border: #1E293B;
+  --color-heading: #F8FAFC;
+  --color-selection: #312E81;
+  --color-field-bg: #151C2E;
+  --color-field-border: #2A3550;
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, .4);
+}
+
+/* ============================================================
+   Base
+   ============================================================ */
+* { box-sizing: border-box; }
+html, body, #root { min-height: 100%; }
+body {
+  margin: 0;
+  font-family: var(--font-ui);
+  font-size: 15px;
+  color: var(--color-text);
+  background: var(--color-background);
+  -webkit-font-smoothing: antialiased;
+}
+h1, h2, h3 { font-family: var(--font-heading); color: var(--color-heading); margin: 0; }
+h1 { font-size: 22px; font-weight: 700; }
+h2 { font-size: 18px; font-weight: 700; }
+h3 { font-size: 15px; font-weight: 700; }
+a { color: var(--color-primary); }
+::selection { background: var(--color-selection); }
+
+:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
+
+.solo-lectores { /* sólo para lectores de pantalla */
+  position: absolute; width: 1px; height: 1px; overflow: hidden;
+  clip: rect(0 0 0 0); white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    transition-duration: .01ms !important;
+    animation-duration: .01ms !important;
+  }
+}
+
+/* ============================================================
+   Botones (docs/06 §6.6)
+   ============================================================ */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 9px 16px;
+  border: 1px solid transparent; border-radius: var(--radius-btn);
+  font: 600 14px/1.2 var(--font-ui); cursor: pointer;
+  min-height: 44px;              /* objetivo táctil 44×44 (docs/06 §6.11) */
+  transition: background .15s ease, border-color .15s ease, color .15s ease;
+}
+.btn:disabled { opacity: .55; cursor: not-allowed; }
+/* fix UX-S013: estado :active en todas las familias de botones */
+.btn:active:not(:disabled) { transform: translateY(1px); filter: brightness(.93); }
+.btn-primario { background: var(--color-primary); color: var(--color-on-primary); }
+.btn-primario:hover:not(:disabled) { background: var(--color-primary-hover); }
+/* fix UX-S009: verdes/peligros con contraste AA sobre texto blanco (ambos temas) */
+.btn-exito { background: #15803D; color: #fff; }
+.btn-exito:hover:not(:disabled) { background: #166534; }
+.btn-peligro { background: #DC2626; color: #fff; }
+.btn-peligro:hover:not(:disabled) { background: #B91C1C; }
+.btn-fantasma {
+  background: transparent; color: var(--color-primary);
+  border-color: var(--color-field-border);
+}
+.btn-fantasma:hover:not(:disabled) { background: var(--color-surface-alt); }
+.btn-suave { background: var(--color-surface-alt); color: var(--color-text); }
+.btn-suave:hover:not(:disabled) { border-color: var(--color-muted); }
+/* fix UX-S012: objetivos táctiles ≥44 px también en botones compactos */
+.btn-compacto { padding: 9px 14px; min-height: 44px; font-size: 13px; border-radius: 8px; }
+
+/* ============================================================
+   Campos de formulario — <label> real (docs/06 §6.11)
+   ============================================================ */
+.campo { display: grid; gap: 5px; margin-bottom: 14px; }
+.campo > label { font-weight: 600; font-size: 13px; }
+.campo input, .campo select, .campo textarea {
+  font: 400 14px/1.3 var(--font-ui);
+  color: var(--color-text);
+  background: var(--color-field-bg);
+  border: 1px solid var(--color-field-border);
+  border-radius: 10px;
+  padding: 10px 12px;
+  min-height: 44px;
+}
+.campo input:focus, .campo select:focus, .campo textarea:focus {
+  border-color: var(--color-primary); outline: none;
+  box-shadow: 0 0 0 3px rgba(91, 33, 182, .15);
+}
+.campo .ayuda { font-size: 12px; color: var(--color-muted); }
+/* fix UX-S013 + UX-S015: estados de campo deshabilitado/inválido */
+.campo input:disabled, .campo select:disabled, .campo textarea:disabled {
+  background: var(--color-surface-alt); color: var(--color-muted); cursor: not-allowed;
+}
+.campo input[aria-invalid="true"], .campo select[aria-invalid="true"] {
+  border-color: var(--color-danger); box-shadow: 0 0 0 3px rgba(239,68,68,.15);
+}
+.error-campo { font-size: 12px; color: var(--color-danger); font-weight: 600; }
+
+/* ============================================================
+   Aviso de error / aviso en vivo (docs/06 §6.11: no sólo color)
+   ============================================================ */
+.aviso {
+  display: flex; gap: 8px; align-items: flex-start;
+  padding: 10px 12px; border-radius: 10px; font-size: 14px; margin: 10px 0;
+}
+.aviso-error { background: color-mix(in srgb, var(--color-danger) 12%, transparent);
+  border: 1px solid var(--color-danger); color: var(--color-text); }
+.aviso-ok { background: color-mix(in srgb, var(--color-success) 14%, transparent);
+  border: 1px solid var(--color-success); }
+.aviso-aviso { background: color-mix(in srgb, var(--color-warning) 14%, transparent);
+  border: 1px solid var(--color-warning); }
+.aviso .icono { font-weight: 700; }
+
+/* ============================================================
+   Tarjetas y layout de página
+   ============================================================ */
+.tarjeta {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  padding: 16px 18px;
+}
+.tarjeta h2, .tarjeta h3 { margin-bottom: 10px; }
+.pagina { padding: 24px 30px; max-width: 1200px; }
+.pagina > .titulo { margin-bottom: 18px; }
+.rejilla { display: grid; gap: 14px; }
+.rejilla-3 { grid-template-columns: repeat(3, 1fr); }
+.rejilla-4 { grid-template-columns: repeat(4, 1fr); }
+.rejilla-2 { grid-template-columns: repeat(2, 1fr); }
+/* fix UX-S008: proporción del dashboard con breakpoints, no inline */
+.rejilla-dashboard { grid-template-columns: 2fr 1fr; margin-top: 16px; }
+@media (max-width: 900px) { .rejilla-dashboard { grid-template-columns: 1fr; } }
+/* fix UX-S009: amarillo warning como texto sobre claro no cumple AA */
+.sospechas { color: #B45309; }
+[data-theme='oscuro'] .sospechas { color: var(--color-warning); }
+@media (max-width: 1079px) { .rejilla-4 { grid-template-columns: repeat(2, 1fr); } }
+/* fix UX-S008: colapsar también la rejilla de 2 y las filas en móvil */
+@media (max-width: 767px)  { .rejilla-2, .rejilla-3, .rejilla-4 { grid-template-columns: 1fr; } }
+
+.metrica .etiqueta {
+  font-size: 11px; font-weight: 700; letter-spacing: .05em;
+  text-transform: uppercase; color: var(--color-muted);
+}
+.metrica .cifra { font-family: var(--font-heading); font-size: 22px; font-weight: 700; margin-top: 2px; }
+
+/* ============================================================
+   Tablas
+   ============================================================ */
+.contenedor-tabla { overflow-x: auto; border-radius: var(--radius-card); }
+table.tabla {
+  width: 100%; border-collapse: collapse;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border); border-radius: var(--radius-card);
+  font-size: 14px;
+}
+.tabla th {
+  text-align: left; padding: 10px 12px; font-weight: 700; font-size: 12px;
+  text-transform: uppercase; letter-spacing: .04em;
+  color: #475569;               /* fix UX-S009: ≥4.5:1 en claro */
+  background: var(--color-surface-alt);
+  border-bottom: 1px solid var(--color-border);
+}
+[data-theme='oscuro'] .tabla th { color: var(--color-muted); }
+.tabla td { padding: 10px 12px; border-bottom: 1px solid var(--color-border); }
+.tabla tr:last-child td { border-bottom: none; }
+.tabla tbody tr:hover { background: color-mix(in srgb, var(--color-primary) 6%, transparent); }
+
+.pill {
+  display: inline-block; padding: 2px 10px; border-radius: 999px;
+  font-size: 12px; font-weight: 600; border: 1px solid transparent;
+}
+.pill-verde {
+  background: color-mix(in srgb, var(--color-success) 15%, transparent);
+  color: #15803D;               /* fix UX-S009 */
+  border-color: var(--color-success);
+}
+[data-theme='oscuro'] .pill-verde { color: #4ADE80; }
+.pill-naranja { background: color-mix(in srgb, var(--color-warning) 16%, transparent); color: var(--color-text); border-color: var(--color-warning); }
+.pill-rojo { background: color-mix(in srgb, var(--color-danger) 14%, transparent); color: var(--color-text); border-color: var(--color-danger); }
+.pill-gris { background: var(--color-surface-alt); color: var(--color-muted); border-color: var(--color-border); }
+
+.importe { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+
+/* ============================================================
+   Shell: barra lateral 235 px (siempre oscura) + contenido
+   ============================================================ */
+.shell { display: grid; grid-template-columns: var(--sidebar-w) 1fr; min-height: 100vh; }
+@media (max-width: 1079px) { .shell { grid-template-columns: 64px 1fr; } }
+
+.sidebar {
+  background: var(--color-sidebar); color: var(--color-sidebar-text);
+  display: flex; flex-direction: column; padding: 14px 0 18px;
+  position: sticky; top: 0; height: 100vh;
+}
+.sidebar .logo {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 16px 16px;
+}
+.sidebar .logo img { height: 30px; }
+.sidebar .logo .nombre { font-family: var(--font-heading); font-weight: 700; font-size: 17px; letter-spacing: .12em; }
+@media (max-width: 1079px) {
+  .sidebar .logo .nombre, .sidebar .usuario .datos { display: none; }
+  /* fix UX-S003: colapsar visualmente sin borrar el nombre accesible
+     (display:none lo elimina del árbol de accesibilidad; clip no) */
+  .sidebar .item .texto {
+    position: absolute; width: 1px; height: 1px; overflow: hidden;
+    clip: rect(0 0 0 0); white-space: nowrap;
+  }
+  .sidebar .logo { justify-content: center; padding-inline: 4px; }
+}
+
+.sidebar nav { display: flex; flex-direction: column; gap: 2px; flex: 1; }
+.sidebar .item {
+  display: flex; align-items: center; gap: 12px;
+  margin: 1px 10px; padding: 10px 12px; border-radius: 10px;
+  color: var(--color-sidebar-muted);
+  /* el original no dibuja foco: la web lo añade (docs/06 §6.6, accesibilidad) */
+}
+.sidebar .item:hover { background: var(--color-sidebar-hover); color: var(--color-sidebar-text); }
+.sidebar .item.activo { color: var(--color-sidebar-text); background: rgba(124, 58, 237, .35);
+  box-shadow: inset 3px 0 0 var(--color-primary); }
+.sidebar .item .glifo { font-size: 15px; width: 18px; text-align: center; }
+.sidebar .item.activo .glifo { color: var(--color-primary); }
+.sidebar .item .texto { font-size: 14px; font-weight: 600; }
+.sidebar .usuario {
+  margin: 10px; padding: 10px 12px; border-radius: 10px;
+  background: rgba(255, 255, 255, .06);
+  display: flex; gap: 10px; align-items: center;
+}
+.sidebar .usuario .datos { font-size: 12px; line-height: 1.35; }
+.sidebar .usuario .rol { color: var(--color-sidebar-muted); }
+.sidebar .salir {
+  margin: 0 10px; padding: 9px 12px; border-radius: 10px;
+  background: transparent; color: var(--color-sidebar-muted);
+  border: 1px solid rgba(255,255,255,.15); cursor: pointer;
+  font: 600 13px var(--font-ui);
+}
+.sidebar .salir:hover { background: var(--color-sidebar-hover); color: var(--color-sidebar-text); }
+
+/* ============================================================
+   Login con cristal (docs/06 §6.8 — opción C: cristal CSS + respaldo)
+   ============================================================ */
+.login {
+  min-height: 100vh;
+  background-color: #05060C;
+  background-image: url('/marca/login_bg.jpg');
+  background-size: cover; background-position: center;
+  display: grid;
+}
+@media (min-width: 1040px) {
+  /* la tarjeta en el reparto 55,5% para que la marca quede a la izquierda */
+  .login { grid-template-columns: .555fr .445fr; }
+  .login .zona-marca { grid-column: 1; }
+  .login .zona-tarjeta { grid-column: 2; }
+}
+.login .zona-marca {
+  display: flex; align-items: flex-end; padding: 48px;
+  color: #fff; font-size: 13px; opacity: .85;
+}
+.login .zona-tarjeta {
+  display: flex; align-items: center; justify-content: center;
+  padding: 48px 24px;
+}
+.cristal {
+  width: 440px; max-width: 100%;
+  min-height: 520px;
+  padding: 36px 34px;
+  border-radius: var(--radius-login);
+  color: var(--color-sidebar-text);
+  position: relative;
+  /* material del cristal: 4 capas (docs/06 §6.8) */
+  background:
+    linear-gradient(160deg, rgba(255,255,255,.045) 0%, rgba(255,255,255,0) 55%),
+    linear-gradient(220deg, rgba(163,230,53,.035) 0%, rgba(255,255,255,0) 40%),
+    rgba(27, 31, 42, .88);
+  border: 1px solid rgba(255,255,255,.14);
+  border-top-color: rgba(255,255,255,.28); /* canto interior más intenso arriba */
+  box-shadow: 0 24px 60px rgba(0,0,0,.55);
+}
+@supports (backdrop-filter: blur(20px)) {
+  .cristal { backdrop-filter: blur(20px) saturate(1.15); background-color: rgba(15, 19, 28, .62); }
+}
+.cristal .logo { display: flex; justify-content: center; margin-bottom: 8px; }
+.cristal .logo img { height: 74px; }
+.cristal .titulo { text-align: center; font-weight: 600; color: #fff; margin-bottom: 22px; }
+.cristal .subtitulo { color: rgba(255,255,255,.65); margin: -14px 0 18px; font-size: 13px; }
+.cristal .campo > label { color: rgba(255,255,255,.85); }
+.cristal .campo > label:focus-within { color: #C4B5FD; }
+.cristal .campo input {
+  background: rgba(0,0,0,.32);
+  border: 1px solid rgba(255,255,255,.22);
+  color: #fff;
+}
+.cristal .campo input::placeholder { color: rgba(255,255,255,.62); }
+.cristal .campo input:focus { border-color: var(--color-primary); box-shadow: 0 0 0 3px rgba(124,58,237,.35); }
+.cristal .btn-primario { width: 100%; margin-top: 6px; }
+.cristal .pie { margin-top: 20px; font-size: 12px; color: rgba(255,255,255,.55); text-align: center; }
+/* fix UX-S004: los «enlaces» del pie son botones reales */
+.cristal .pie .enlace {
+  background: none; border: none; padding: 0; margin: 0;
+  color: #C4B5FD; text-decoration: underline; cursor: pointer;
+  font: inherit; min-height: 32px;
+}
+
+/* ============================================================
+   Diálogos (Modal)
+   ============================================================ */
+.fondo-dialogo {
+  position: fixed; inset: 0; background: rgba(2, 6, 23, .55);
+  display: grid; place-items: center; z-index: 40;
+}
+.dialogo {
+  width: 520px; max-width: calc(100vw - 32px);
+  max-height: calc(100vh - 64px); overflow: auto;
+  background: var(--color-surface); border: 1px solid var(--color-border);
+  border-radius: var(--radius-card); box-shadow: 0 18px 50px rgba(0,0,0,.35);
+  padding: 20px 22px;
+}
+.dialogo .cabecera-dialogo { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+.dialogo .cerrar-dialogo {
+  background: none; border: none; font-size: 18px; cursor: pointer;
+  color: var(--color-muted); padding: 6px; border-radius: 8px;
+  min-width: 44px; min-height: 44px;   /* fix UX-S012 */
+}
+.dialogo .cerrar-dialogo:hover { background: var(--color-surface-alt); color: var(--color-text); }
+.pie-dialogo { display: flex; justify-content: flex-end; gap: 10px; margin-top: 16px; }
+
+/* ============================================================
+   DatePicker emergente (docs/06 §6.10)
+   ============================================================ */
+.picker { position: relative; display: inline-flex; flex: 1; }
+.picker .glifo-calendario {
+  position: absolute; right: 1px; top: 3px;
+  border: none; background: var(--color-surface-alt);
+  color: var(--color-primary); font-size: 16px;
+  width: 38px; height: 38px; border-radius: 8px; cursor: pointer;
+}
+.picker input { width: 100%; font-family: var(--font-mono); padding-right: 44px; }
+.calendario {
+  position: absolute; top: calc(100% + 6px); left: 0; z-index: 30;
+  width: 344px; padding: 10px;
+  background: var(--color-surface); border: 1px solid var(--color-border);
+  border-radius: var(--radius-card); box-shadow: 0 12px 34px rgba(0,0,0,.28);
+}
+.calendario .cabecera-cal { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.calendario .cabecera-cal .mes { font-weight: 700; font-family: var(--font-heading); font-size: 14px; }
+.calendario .nav-mes {
+  background: none; border: 1px solid var(--color-border); border-radius: 8px; cursor: pointer;
+  padding: 0 14px; min-height: 44px; min-width: 44px; color: var(--color-text);
+}
+.calendario .dias { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
+.calendario .dias .dia-semana { font-size: 11px; font-weight: 700; color: var(--color-muted); text-align: center; padding: 4px 0; }
+.calendario .dias .dia {
+  border: none; background: none; cursor: pointer; padding: 10px 0; border-radius: 8px;
+  font: 500 13px var(--font-ui); color: var(--color-text); min-width: 44px; min-height: 44px;
+}
+.calendario .dias .dia:hover { background: var(--color-surface-alt); }
+.calendario .dias .dia.hoy { box-shadow: inset 0 0 0 1px var(--color-primary); }
+.calendario .dias .dia.seleccionado { background: var(--color-primary); color: #fff; }
+.calendario .dias .dia.atenuado, .calendario .dias .dia:disabled { color: var(--color-muted); opacity: .4; cursor: default; }
+.calendario .pie-cal { display: flex; justify-content: space-between; margin-top: 8px; }
+
+/* ============================================================
+   Gráfico de ocupación (docs/06 §6.9)
+   ============================================================ */
+.grafico { position: relative; margin: 0; }
+.grafico svg { display: block; width: 100%; }
+.grafico .rotulo-capacidad {
+  position: absolute; top: 6px; right: 10px;
+  font: 700 12px var(--font-mono); color: var(--color-muted);
+}
+
+/* miscelánea */
+.fila { display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap; }
+.fila > * { min-width: 160px; }
+/* fix UX-S008: filas de filtros apiladas a 1 columna en móvil */
+@media (max-width: 767px) { .fila > * { min-width: 100%; } }
+.cifra-cobro {
+  font-family: var(--font-heading); font-size: 34px; font-weight: 700;
+  color: var(--color-primary);
+}
+.cifra-cambio { color: var(--color-success-hover); }
+[data-theme='oscuro'] .cifra-cambio { color: #4ADE80; } /* fix UX-S009 */
+.lazos { display: flex; flex-direction: column; gap: 12px; }
+
+/* fix UX-S013: indicador de carga compartido por los listados */
+.cargando { color: var(--color-muted); font-size: 14px; padding: 14px 0; }
+.cargando::after {
+  content: '…'; display: inline-block; animation: puntos-carga 1.2s infinite steps(4);
+}
+@keyframes puntos-carga {
+  0% { content: ''; } 25% { content: '.'; } 50% { content: '..'; } 75% { content: '...'; }
+}

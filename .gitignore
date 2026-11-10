@@ -1,0 +1,20 @@
+# BD operativa y respaldos: datos en vivo, nunca se versionan
+runtime/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# Node / build de frontend
+frontend/node_modules/
+frontend/dist/
+*.tsbuildinfo
+frontend/.vite/
+
+# Sistema operativo
+Thumbs.db
+.DS_Store
+
+# Entorno local
+.env
