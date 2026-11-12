@@ -136,7 +136,18 @@ export function DatePicker({
     `${d} de ${MESES[vista.mes0]} de ${vista.anio}`
 
   return (
-    <div className="picker" ref={contenedor}>
+    <div
+      className="picker"
+      ref={contenedor}
+      onKeyDown={(e) => {
+        // Esc cierra el calendario aunque el foco esté en el disparador o en un día
+        if (e.key === 'Escape' && abierto) {
+          e.stopPropagation()
+          setAbierto(false)
+          contenedor.current?.querySelector('input')?.focus()
+        }
+      }}
+    >
       <input
         type="text"
         inputMode="numeric"
@@ -153,12 +164,6 @@ export function DatePicker({
         onFocus={(e) => {
           // clic en campo vacío: abre el calendario; con texto deja el cursor
           if (e.target.value === '') abrirEn('')
-        }}
-        onKeyDown={(e) => {
-          if (e.key === 'Escape' && abierto) {
-            e.stopPropagation()
-            setAbierto(false)
-          }
         }}
       />
       <button

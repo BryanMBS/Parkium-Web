@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { admin, type DatosSitio, type PlantillaRecibo, type Tarifa, type UsuarioLista } from '../api/admin'
 import { auth } from '../api/auth'
-import { reloj, type EstadoReloj } from '../api/historico'
 import { useAuth } from '../hooks/useAuth'
 import { Aviso, MensajeApi } from '../components/ui/Aviso'
 import { aImporte } from '../lib/formato'
@@ -10,7 +9,7 @@ import { TIPOS_VEHICULO, ESQUEMAS_COBRO, ROLES } from '../theme/catalogos'
 
 /** Configuración: 6 pestañas según rol (docs/02 §2.5, docs/04 §4.8):
  * 1) Mi perfil (todos) · 2) Tarifas · 3) Usuarios (admin+) ·
- * 4) Parqueadero · 5) Plantilla de recibo · 6) Reloj (super admin PATCH). */
+ * 4) Parqueadero · 5) Plantilla de recibo . */
 export function SettingsPage(): JSX.Element {
   const { usuario } = useAuth()
   const esAdmin = usuario?.rol === 'ADMIN' || usuario?.rol === 'SUPERADMIN'
@@ -29,7 +28,6 @@ export function SettingsPage(): JSX.Element {
           { id: 'plantilla', nombre: 'Plantilla del recibo' },
         ] as const)
       : []),
-    { id: 'reloj', nombre: 'Reloj' } as const,
     { id: 'perfil', nombre: 'Mi perfil' } as const,
   ]
 
@@ -58,7 +56,6 @@ export function SettingsPage(): JSX.Element {
       {pestaña === 'usuarios' && <TabUsuarios />}
       {pestaña === 'sitio' && <TabSitio />}
       {pestaña === 'plantilla' && <TabPlantilla />}
-      {pestaña === 'reloj' && <TabReloj />}
       {pestaña === 'perfil' && <TabPerfil />}
     </>
   )
@@ -399,7 +396,7 @@ function TabSitio(): JSX.Element {
         <div className="fila">
           <div className="campo" style={{ margin: 0, flex: 1 }}>
             <label htmlFor="si-nit">NIT</label>
-            <input id="si-nit" value={datos.nit} onChange={(e) => setDatos({ ...datos, nit: e.target.value })} />
+            <input id="si-nit" value={datos.nit ?? ''} onChange={(e) => setDatos({ ...datos, nit: e.target.value })} />
           </div>
           <div className="campo" style={{ margin: 0, flex: 1 }}>
             <label htmlFor="si-tel">Teléfono</label>
@@ -408,7 +405,7 @@ function TabSitio(): JSX.Element {
         </div>
         <div className="campo">
           <label htmlFor="si-dir">Dirección</label>
-          <input id="si-dir" value={datos.direccion} onChange={(e) => setDatos({ ...datos, direccion: e.target.value })} />
+          <input id="si-dir" value={datos.direccion ?? ''} onChange={(e) => setDatos({ ...datos, direccion: e.target.value })} />
         </div>
         <div className="campo" style={{ width: 180 }}>
           <label htmlFor="si-cap">Capacidad total</label>
@@ -468,11 +465,11 @@ function TabPlantilla(): JSX.Element {
         <div className="fila">
           <div className="campo" style={{ margin: 0, flex: 1 }}>
             <label htmlFor="pt-nit">NIT</label>
-            <input id="pt-nit" value={datos.nit} onChange={(e) => setDatos({ ...datos, nit: e.target.value })} />
+            <input id="pt-nit" value={datos.nit ?? ''} onChange={(e) => setDatos({ ...datos, nit: e.target.value })} />
           </div>
           <div className="campo" style={{ margin: 0, flex: 1 }}>
             <label htmlFor="pt-dir">Dirección</label>
-            <input id="pt-dir" value={datos.direccion} onChange={(e) => setDatos({ ...datos, direccion: e.target.value })} />
+            <input id="pt-dir" value={datos.direccion ?? ''} onChange={(e) => setDatos({ ...datos, direccion: e.target.value })} />
           </div>
         </div>
         <div className="campo">
@@ -505,61 +502,6 @@ function TabPlantilla(): JSX.Element {
           </button>
         </div>
       </form>
-    </div>
-  )
-}
-
-/* ------- Reloj ------- */
-
-function TabReloj(): JSX.Element {
-  const queryClient = useQueryClient()
-  const [error, setError] = useState<string | null>(null)
-  const estadoQ = useQuery({ queryKey: ['reloj'], queryFn: () => reloj.estado(), refetchInterval: 60_000 })
-
-  const verificar = useMutation({
-    mutationFn: (usarRed: boolean) => reloj.verificar(usarRed),
-    onSuccess: (estado) => {
-      setError(null)
-      queryClient.setQueryData(['reloj'], estado)
-    },
-    onError: (e) => setError(MensajeApi(e)),
-  })
-
-  if (estadoQ.isLoading) return <div className="tarjeta">Cargando…</div>
-  const estado: EstadoReloj | undefined = estadoQ.data
-
-  return (
-    <div className="tarjeta" style={{ maxWidth: 560 }}>
-      <h2>Seguridad del reloj</h2>
-      <Aviso variante="error">{error}</Aviso>
-      {estado && (
-        <>
-          <Aviso variante={estado.ok ? 'ok' : 'aviso'}>{estado.mensaje}</Aviso>
-          <dl style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '4px 12px', fontSize: 14 }}>
-            <dt style={{ color: 'var(--color-muted)' }}>Fuente</dt>
-            <dd style={{ margin: 0 }}>{estado.fuente}</dd>
-            <dt style={{ color: 'var(--color-muted)' }}>Hora del sistema</dt>
-            <dd style={{ margin: 0, fontFamily: 'var(--font-mono)' }}>{estado.hora_sistema}</dd>
-            <dt style={{ color: 'var(--color-muted)' }}>Referencia</dt>
-            <dd style={{ margin: 0, fontFamily: 'var(--font-mono)' }}>{estado.hora_referencia}</dd>
-            <dt style={{ color: 'var(--color-muted)' }}>Deriva</dt>
-            <dd style={{ margin: 0, fontFamily: 'var(--font-mono)', fontWeight: 700 }}>{estado.deriva_texto}</dd>
-          </dl>
-          <div style={{ marginTop: 12, display: 'flex', gap: 8 }}>
-            <button className="btn btn-primario" onClick={() => verificar.mutate(true)} disabled={verificar.isPending}>
-              {verificar.isPending ? 'Verificando…' : 'Verificar con la fuente externa'}
-            </button>
-            <button className="btn btn-suave" onClick={() => verificar.mutate(false)} disabled={verificar.isPending}>
-              Verificar sólo con el ancla
-            </button>
-          </div>
-          <p style={{ color: 'var(--color-muted)', fontSize: 12, marginTop: 10 }}>
-            La verificación contra la fuente externa reancla el reloj del servidor: es la vía de
-            recuperación si el operador corrigió la hora del equipo (docs/04 §4.10).
-            Si la deriva era sospechosa, un cobro no pudo realizarse; ahora se desbloquea.
-          </p>
-        </>
-      )}
     </div>
   )
 }

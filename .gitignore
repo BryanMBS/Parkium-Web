@@ -18,3 +18,9 @@ Thumbs.db
 
 # Entorno local
 .env
+
+# Archivos de agentes (definiciones y reportes generados): sólo locales
+agente_*.md
+Reporte_Auditoria_*.md
+.claude/
+CLAUDE.md

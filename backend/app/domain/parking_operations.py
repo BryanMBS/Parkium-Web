@@ -255,8 +255,6 @@ def register_entry(user: dict, plate_raw: str, vehicle_type: str = "CAR") -> dic
 
 def quote_exit(user: dict, plate: str) -> dict:
     """Cotizar salida: NO cierra la estadía (docs/04 §4.3)."""
-    from . import time_integrity
-    time_integrity.check_before_billing(user)
     plate_n = normalise_plate(plate)
     site_row = site(user["tenant_id"])
     stay = find_active_stay(plate_n, user["tenant_id"])
@@ -290,8 +288,7 @@ def collect_payment(user: dict, plate, metodo: str, monto: str,
                     efectivo_recibido: str | None = None, referencia: str | None = None,
                     idempotency_key: str | None = None) -> dict:
     """Cobro transaccional (docs/04 §4.13, pasos 1-11)."""
-    from . import time_integrity, cash as cash_service
-    time_integrity.check_before_billing(user)
+    from . import cash as cash_service
 
     plate_n = normalise_plate(plate)
     site_row = site(user["tenant_id"])
@@ -354,6 +351,7 @@ def collect_payment(user: dict, plate, metodo: str, monto: str,
                 lautc.astimezone(time_utils.site_tz(site_row)).strftime("%H:%M"),
                 sub["permitted_start"], sub["permitted_end"]):
             sub = None
+        plan_id = None  # la estadía guarda la tarifa aplicada (reporte «Por tarifa», docs/04 §4.9)
         if sub:
             monto_final, esquema = D0, "SUBSCRIPTION"
         else:
@@ -361,7 +359,7 @@ def collect_payment(user: dict, plate, metodo: str, monto: str,
             if not plan_row:
                 raise DomainError("No hay tarifa vigente para este tipo de vehículo.")
             monto_final = calculate_tariff(plan_row, minutes)
-            esquema = plan_row["billing_scheme"]
+            esquema, plan_id = plan_row["billing_scheme"], plan_row["id"]
         if monto_final >= 0 and amount and amount < monto_final:
             raise DomainError(
                 f"El monto indicado ({money(amount)}) es menor al importe calculado ({money(monto_final)}).")
@@ -402,8 +400,9 @@ def collect_payment(user: dict, plate, metodo: str, monto: str,
 
         # cierre de la estadía y del cobro, JUNTOS (docs/04 §4.13)
         conn.execute(
-            "UPDATE parking_stays SET exit_at = ?, exit_user_id = ?, status = 'PAID', calculated_amount = ? "
-            "WHERE id = ?", (paid_at, user["id"], monto_cobro, stay["id"]))
+            "UPDATE parking_stays SET exit_at = ?, exit_user_id = ?, status = 'PAID', calculated_amount = ?, "
+            "tariff_plan_id = COALESCE(tariff_plan_id, ?) WHERE id = ?",
+            (paid_at, user["id"], monto_cobro, plan_id, stay["id"]))
         receipt = _issue_receipt_txn(conn, site_row, receipt_type="EXIT", stay_id=stay["id"],
                                      payment_id=pago_id, issued_by=user["id"])
         auth._audit(conn, user["id"], "payment", pago_id, "PAYMENT_COLLECTED", None,

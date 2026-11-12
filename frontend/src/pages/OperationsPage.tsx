@@ -82,21 +82,21 @@ export function OperationsPage(): JSX.Element {
               placeholder="ABC123"
               autoFocus
             />
-            <span className="ayuda">Se normaliza a mayúsculas sin espacios (3 a 8 caracteres).</span>
+            <span className="ayuda">Se normaliza a mayúsculas sin espacios (3 a 15 caracteres alfanuméricos).</span>
           </div>
 
           {activa.isFetching && <p style={{ color: 'var(--color-muted)' }}>Consultando…</p>}
-          <Aviso variante="aviso">{sinEstadia && placaHi ? `No hay estadía activa de ${placaHi}. Registra la entrada.` : null}</Aviso>
+          <Aviso variante="aviso">{sinEstadia && placaHi && !resultado ? `No hay estadía activa de ${placaHi}. Registra la entrada.` : null}</Aviso>
           <Aviso variante="error">{error}</Aviso>
 
-          {activa.data && (
+          {activa.data && !resultado && (
             <p style={{ marginTop: 4, fontSize: 13 }}>
               Estadía <strong>{activa.data.estadia_id}</strong> · ingreso {activa.data.ingreso_local} · estado{' '}
               <strong>{ESTADOS_ESTADIA[activa.data.estado] ?? activa.data.estado}</strong>
             </p>
           )}
 
-          {sinEstadia && (
+          {sinEstadia && !resultado && (
             <CrearEntrada placa={placaHi} enviando={enviandoEntrada} onOk={(t) => void crearEntrada(t)} />
           )}
 
@@ -109,6 +109,7 @@ export function OperationsPage(): JSX.Element {
                 void queryClient.invalidateQueries({ queryKey: ['estadia', placaHi] })
                 void queryClient.invalidateQueries({ queryKey: ['dashboard'] })
                 void queryClient.invalidateQueries({ queryKey: ['cotizacion', placaHi] })
+                void queryClient.invalidateQueries({ queryKey: ['caja-esperado'] })
               }}
               alError={setError}
             />

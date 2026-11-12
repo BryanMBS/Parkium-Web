@@ -1,7 +1,7 @@
 # Parkium — Versión web
 
 Sistema de administración de parqueaderos (entrada, operación/cobro, caja, comprobantes,
-mensualidades, reloj, histórico, dashboard, reportes y configuración) construido sobre las
+mensualidades, histórico, dashboard, reportes y configuración) construido sobre las
 especificaciones de `docs/` (14 archivos `.md`) y los recursos de `assets/`.
 
 **Stack decidido:** FastAPI + `sqlite3` crudo (equivalente al original, listo para Postgres)
@@ -9,7 +9,7 @@ especificaciones de `docs/` (14 archivos `.md`) y los recursos de `assets/`.
 desde `backend/app/domain/` (copia adaptada de `app/services/` del original).
 
 > Stack adoptado por pregunta al usuario: **SQLite ya, listo para Postgres** y **MVP completo**
-> (autenticación, operación/cobro, caja, comprobantes, mensualidades, reloj, histórico,
+> (autenticación, operación/cobro, caja, comprobantes, mensualidades, histórico,
 > dashboard, reportes y configuración).
 
 ---
@@ -58,13 +58,11 @@ Se leen desde `backend/app/config.py`. Las principales:
 | Variable | Valor por defecto | Notas |
 |----------|-------------------|-------|
 | `PARKIUM_ENTORNO` | `desarrollo` | `produccion` activa cookie `secure` |
-| `PARKIUM_SQLITE_PATH` | `backend/runtime/parkium.db` | base de datos |
+| `PARKIUM_SQLITE_PATH` | `<raiz>/runtime/parkium.db` | base de datos (no versionada: `runtime/` está en `.gitignore`) |
 | `PARKIUM_DATA_DIR` | `<raiz>/runtime` | carpeta de datos |
 | `PARKIUM_DURACION_SESION_HORAS` | `12` | vida de la sesión de cookie |
 | `PARKIUM_ORIGENES_PERMITIDOS` | `http://localhost:5173,http://localhost:4173` | CORS del frontend |
 | `PARKIUM_URL_PUBLICA_BASE` | `""` | base de los QR de los comprobantes |
-| `PARKIUM_URL_FUENTE_HORA` | `https://www.google.com/generate_204` | verificación del reloj |
-| `PARKIUM_ESPERA_MAXIMA_FUENTE_HORA` | `6.0` | timeout de la fuente externa (seg) |
 | `PARKIUM_PROVEEDOR_FACTURACION` | `DISABLED` | facturación electrónica DESACTIVADA (docs/12 §4) |
 | `PARKIUM_ADMIN_PLATAFORMA_CONTRASENA` | *(ninguna)* | sólo la lee `scripts/create_platform_admin.py`; no es runtime |
 
@@ -158,8 +156,10 @@ powershell -ExecutionPolicy Bypass -File backend/scripts/smoke_test.ps1
 
 Verifica: `health` → login `admin`/`Cambiame.123` → entrada con placa normalizada +
 factura de ingreso → duplicado `409` → cotización → apertura de turno de caja →
-cobro con `Idempotency-Key` → idempotencia (no duplica) → dashboard → estado del reloj
-→ importe insuficiente `400`.
+cobro con `Idempotency-Key` → idempotencia (no duplica) → dashboard → importe insuficiente `400`.
+
+> Usa una copia de la base (ver más abajo) o una base de desarrollo: la prueba **escribe**
+> estadías, pagos y comprobantes.
 
 ### Prueba de humo multi-tenant (Fase 1-2 del módulo de plataforma)
 
@@ -167,8 +167,8 @@ Levanta un servidor de pruebas contra una **copia** de la base y ejecuta:
 
 ```powershell
 cd backend
-Copy-Item runtime\parkium.db runtime\_test_multi.db
-$env:PARKIUM_SQLITE_PATH = "$PWD\runtime\_test_multi.db"
+Copy-Item ..\runtime\parkium.db ..\runtime\_test_multi.db
+$env:PARKIUM_SQLITE_PATH = (Resolve-Path ..\runtime\_test_multi.db).Path
 python -m uvicorn app.main:app --port 8010
 # en otra consola:
 $env:PARKIUM_BASE_URL = 'http://127.0.0.1:8010'
@@ -189,14 +189,12 @@ reactivación, y auditoría con filtros.
 | Ruta | Autenticación | Descripción |
 |------|---------------|-------------|
 | `GET /api/health` | no | Estado del esquema y motor |
-
-> **Nota para monitores externos (UX-D-OBS):** la ruta correcta del chequeo de
-> salud es **`/api/health`**. El servidor **no** expone `/health` (sin prefijo
-> `/api`); apuntar ahí produce 404 perpetuo a cada sonda. Configura uptime/
-> liveness con `http://<host>:<puerto>/api/health`.
 | `POST /api/auth/login` | no | Inicia sesión (cookie `parkium_sesion` HttpOnly) |
 | `POST /api/auth/logout` | sí | Revoca la sesión |
 | `GET /r/{token}` | **no** | Comprobante público por token del QR (docs/04 §4.13) |
+
+> **Monitores externos:** la ruta del chequeo de salud es **`/api/health`**. El servidor
+> **no** expone `/health` (sin prefijo `/api`); apuntar ahí produce 404 en cada sonda.
 
 Todas las demás rutas de `/api` exigen sesión válida y el rol correspondiente.
 El módulo de plataforma vive bajo **`/api/platform/*`** y exige rol
@@ -352,15 +350,16 @@ resultado observable. El equipo marca `[x]` solo lo que ha ejecutado y verificad
 - [ ] before_data y after_data no contienen contraseñas ni tokens.
 - [ ] El perfil de scrypt de la tabla es el vigente.
 
-### 11.9 Seguridad del reloj
+### 11.9 Hora del sistema
 
-- [x] Cada cotización y cada cobro ejecutan la verificación del reloj.
-- [ ] Con el reloj del servidor desviado, ambos devuelven 400 reloj_no_confiable.
-- [ ] last_trusted_utc no avanza mientras la verificación no sea limpia.
-- [x] Una verificación externa correcta reancla el reloj y reactiva el cobro.
-- [ ] Si la red no responde, la verificación local sigue siendo válida y el cobro sigue.
-- [ ] La verificación externa no bloquea más de 6 segundos.
-- [ ] Cada verificación queda en clock_checks con fuente y deriva.
+**Verificación del reloj desactivada.** En la versión web la única autoridad de tiempo es
+el servidor, así que la cotización y el cobro ya no comprueban la deriva del reloj ni
+bloquean con `reloj_no_confiable` (en la práctica bloqueaba los cobros tras cada reinicio
+del equipo). La tarjeta «Estado del reloj» del dashboard y la pestaña «Reloj» de
+Configuración se retiraron. El módulo `time_integrity.py` y las rutas `/api/clock/*`
+siguen en el código pero ya no intervienen en ningún flujo.
+
+- [x] Cotizar y cobrar funcionan aunque el servidor se haya reiniciado.
 - [x] El frontend no calcula ni valida hora alguna.
 
 ### 11.10 Reportes y exportaciones
@@ -451,7 +450,6 @@ resultado observable. El equipo marca `[x]` solo lo que ha ejecutado y verificad
 - [ ] Sin acceso directo a PostgreSQL desde Internet.
 - [ ] Copia de seguridad automática funcionando.
 - [ ] Restauración probada de verdad.
-- [ ] Alerta de reloj sospechoso configurada.
 - [ ] Los registros llegan al sistema centralizado.
 
 ### 11.17 Facturación electrónica
@@ -510,21 +508,22 @@ Tecnológico, tiempo real de migración, red intermitente, capacitación del ope
 
 ## 8. Estado actual de la implementación
 
-- **Backend:** completo (25 tablas, 10 routers, middleware de errores, reloj con ancla,
+- **Backend:** completo (25 tablas, 10 routers, middleware de errores,
   caja con turnos, recibos con QR/Code128, comprobantes públicos `/r/{token}`,
   suscripciones con `_month_end`, reportes con **las 5 exportaciones** de docs/04 §4.9
   (`summary.csv` BOM, `summary.json`, `summary.xlsx`, `summary.pdf` con estilo de marca
   y `full.xlsx` con 5 hojas + 2 gráficos, vía `app/domain/exporters.py` + openpyxl),
   scripts de admin y smoke test. Prueba de humo aprobada: salud, login, entrada,
-  duplicado 409, cotización, caja, cobro + idempotencia, dashboard y reloj.
+  duplicado 409, cotización, caja, cobro + idempotencia y dashboard.
   Las 5 exportaciones verificadas por HTTP con sesión (200, MIME y firma de archivo
-  OK; 401 sin sesión) y el corte `por_tarifa` ya se llena desde
-  `parking_stays.tariff_plan_id`.
+  OK; 401 sin sesión). El corte `por_tarifa` se llena desde `parking_stays.tariff_plan_id`,
+  que el cobro guarda con la tarifa aplicada (las estadías cobradas antes de este cambio
+  no tienen tarifa asociada y no aparecen en ese corte).
 - **Frontend:** Vite + React + TypeScript construido con el sistema de diseño de
   docs/06 (paleta claro/oscuro, sidebar 235px siempre oscura, login con cristal sobre
   `login_bg.jpg`, DatePicker con los 4 formatos, gráfico de ocupación 24 puntos,
   importes `$45.000,00` en es-CO). Páginas: Login, Dashboard, Operación, Histórico,
-  Mensualidades (5 diálogos), Configuración (6 pestañas según rol), Reportes
+  Mensualidades (5 diálogos), Configuración (hasta 5 pestañas según rol), Reportes
   (sólo SUPERADMIN), Recuperación (documentada como no exponible por HTTP).
   **Módulo `/plataforma` (Fase 3):** juego de rutas separado sólo para
   `PLATFORM_ADMIN` con tema oscuro propio (`.pf`, acento morado, outline naranja):
@@ -534,3 +533,6 @@ Tecnológico, tiempo real de migración, red intermitente, capacitación del ope
   y límites), Auditoría (tabla paginada con filtros desde/hasta/acción/tenant).
   El login redirige por rol: plataforma → `/plataforma`, tenant → `/`.
 - **Compilación:** `tsc -b` y `vite build` pasan sin errores.
+- **Auditoría UI/UX:** los 30 hallazgos aplicados y verificados en navegador (Edge headless
+  contra una copia de la base): modales, DatePicker, sidebar colapsada, sin scroll
+  horizontal a 1000/768/375 px, flujo de entrada → cobro y módulo de plataforma.

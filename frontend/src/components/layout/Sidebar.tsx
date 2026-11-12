@@ -46,7 +46,8 @@ export function Sidebar(): JSX.Element {
         ))}
       </nav>
       <button className="salir" onClick={() => setModo(modo === 'claro' ? 'oscuro' : 'claro')}>
-        {modo === 'claro' ? '◐ Modo noche' : '◑ Modo día'}
+        <span className="glifo" aria-hidden="true">{modo === 'claro' ? '◐' : '◑'}</span>
+        <span className="texto">{modo === 'claro' ? 'Modo noche' : 'Modo día'}</span>
       </button>
       <div className="usuario">
         <span className="glifo" aria-hidden="true">•</span>
@@ -55,7 +56,10 @@ export function Sidebar(): JSX.Element {
           <div className="rol">{usuario?.etiqueta_rol ?? usuario?.rol}</div>
         </div>
       </div>
-      <button className="salir" onClick={() => void cerrar()}>Cerrar sesión</button>
+      <button className="salir" onClick={() => void cerrar()}>
+        <span className="glifo" aria-hidden="true">⏻</span>
+        <span className="texto">Cerrar sesión</span>
+      </button>
     </aside>
   )
 }

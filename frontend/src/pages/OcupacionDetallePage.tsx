@@ -30,6 +30,8 @@ export function OcupacionDetallePage(): JSX.Element {
         ← Volver al dashboard
       </Link>
       {(h < 0 || h > 23) && <Aviso variante="error">La hora debe estar entre 0 y 23.</Aviso>}
+      {/* fix UX-S014: indicador de carga consistente con el resto de listados */}
+      {detalle.isLoading && <p className="cargando">Cargando vehículos de esa hora</p>}
       {detalle.isError && <Aviso variante="error">{MensajeApi(detalle.error)}</Aviso>}
 
       {detalle.data && (

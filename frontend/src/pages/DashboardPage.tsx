@@ -1,37 +1,23 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useQuery } from '@tanstack/react-query'
 import { parking } from '../api/parking'
-import { historico, reloj, type EstadoReloj } from '../api/historico'
+import { historico } from '../api/historico'
 import { OccupancyChart } from '../components/charts/OccupancyChart'
 import { Aviso, MensajeApi } from '../components/ui/Aviso'
 import { dinero } from '../lib/formato'
 import { etiquetaDe, TIPOS_VEHICULO } from '../theme/catalogos'
 import { isoDe } from '../components/DatePicker/DatePicker'
 
-/** Dashboard: ocupación, recaudo de hoy, estado del reloj con «Verificar hora»
- * y el gráfico de ocupación del día con detalle por hora (docs/04 §4.5). */
+/** Dashboard: ocupación, recaudo de hoy y el gráfico de ocupación del día con detalle por hora (docs/04 §4.5). */
 export function DashboardPage(): JSX.Element {
-  const queryClient = useQueryClient()
   const navegar = useNavigate()
-  const [errorReloj, setErrorReloj] = useState<string | null>(null)
   const [fecha, setFecha] = useState(isoDe(new Date()))
 
   const dash = useQuery({ queryKey: ['dashboard'], queryFn: () => parking.dashboard() })
   const hourly = useQuery({
     queryKey: ['hourly', fecha],
     queryFn: ({ signal }) => historico.ocupacionPorHora(fecha, signal),
-  })
-
-  const relojQ = useQuery({ queryKey: ['reloj'], queryFn: () => reloj.estado(), refetchInterval: 60_000 })
-
-  const verificar = useMutation({
-    mutationFn: () => reloj.verificar(true),
-    onSuccess: (estado: EstadoReloj) => {
-      setErrorReloj(null)
-      queryClient.setQueryData(['reloj'], estado)
-    },
-    onError: (e) => setErrorReloj(MensajeApi(e)),
   })
 
   if (dash.isError) {
@@ -75,7 +61,7 @@ export function DashboardPage(): JSX.Element {
         </div>
       </div>
 
-      <div className="rejilla rejilla-dashboard">
+      <div className="rejilla-dashboard">
         <div className="tarjeta">
           <h2>Ocupación por hora {fecha !== hoy() ? `· ${fecha}` : ''}</h2>
           {hourly.isLoading && <Cargando />}
@@ -99,45 +85,6 @@ export function DashboardPage(): JSX.Element {
           )}
           {hourly.data?.puntos && hourly.data.maximo > 0 && (
             <DetalleHora fecha={fecha} puntos={hourly.data.puntos} nav={navegar} />
-          )}
-        </div>
-
-        <div className="tarjeta">
-          <h2>Estado del reloj</h2>
-          {relojQ.isLoading && <Cargando />}
-          {relojQ.data && (
-            <>
-              <Aviso variante={relojQ.data.ok ? 'ok' : 'error'}>{relojQ.data.mensaje}</Aviso>
-              <dl style={{ fontSize: 13, display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '4px 12px' }}>
-                <dt style={{ color: 'var(--color-muted)' }}>Fuente</dt>
-                <dd style={{ margin: 0 }}>{etiquetaFuente(relojQ.data.fuente)}</dd>
-                <dt style={{ color: 'var(--color-muted)' }}>Hora del sistema</dt>
-                <dd style={{ margin: 0, fontFamily: 'var(--font-mono)' }}>{relojQ.data.hora_sistema}</dd>
-                <dt style={{ color: 'var(--color-muted)' }}>Referencia</dt>
-                <dd style={{ margin: 0, fontFamily: 'var(--font-mono)' }}>{relojQ.data.hora_referencia}</dd>
-                <dt style={{ color: 'var(--color-muted)' }}>Deriva</dt>
-                <dd style={{ margin: 0, fontFamily: 'var(--font-mono)', fontWeight: 700 }}>
-                  {relojQ.data.deriva_texto}
-                </dd>
-                {relojQ.data.verificaciones_sospechosas > 0 && (
-                  <>
-                    <dt style={{ color: 'var(--color-muted)' }}>Sospechas</dt>
-                    <dd className="sospechas" style={{ margin: 0, fontWeight: 700 }}>
-                      {relojQ.data.verificaciones_sospechosas}
-                    </dd>
-                  </>
-                )}
-              </dl>
-              <button
-                className="btn btn-primario"
-                style={{ marginTop: 12 }}
-                onClick={() => verificar.mutate()}
-                disabled={verificar.isPending}
-              >
-                {verificar.isPending ? 'Verificando…' : 'Verificar hora'}
-              </button>
-              <Aviso variante="error">{errorReloj}</Aviso>
-            </>
           )}
         </div>
       </div>
@@ -183,15 +130,6 @@ function DetalleHora({
       </button>
     </div>
   )
-}
-
-function etiquetaFuente(f: string): string {
-  const mapa: Record<string, string> = {
-    SISTEMA: 'Ancla del servidor',
-    FUENTE_EXTERNA: 'Fuente externa (HTTP Date)',
-    ANCLA: 'Ancla del servidor',
-  }
-  return mapa[f] ?? f
 }
 
 function hoy(): string {
